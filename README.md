@@ -62,45 +62,10 @@ uv pip install "numpy<2" opencv-python-headless mediapipe
 
 ### 3. Clone / copy the script
 
-Place `driver_safety.py` in your project directory.
+Place `imx500_object_detection_demo.py` in your project directory.
 
 ---
 
-## Usage
-
-```bash
-uv run python driver_safety.py
-```
-
-### With a custom model
-
-```bash
-uv run python driver_safety.py \
-  --model /path/to/your/network.rpk \
-  --labels /path/to/labels.txt \
-  --threshold 0.25 \
-  --fps 25
-```
-
-Press **ESC** to quit.
-
-### All arguments
-
-| Argument | Default | Description |
-|---|---|---|
-| `--model` | SSD MobileNetV2 FPN (bundled) | Path to `.rpk` model file |
-| `--labels` | `assets/coco_labels.txt` | Path to labels text file |
-| `--threshold` | `0.20` | Detection confidence threshold |
-| `--iou` | `0.65` | NMS IoU threshold |
-| `--max-detections` | `10` | Max detections per frame |
-| `--fps` | (from model intrinsics) | Camera frame rate |
-| `--bbox-normalization` | — | Enable bounding box normalization |
-| `--bbox-order` | `yx` | Bounding box coordinate order (`yx` or `xy`) |
-| `--postprocess` | — | Postprocess mode (`nanodet` or empty) |
-| `--preserve-aspect-ratio` | — | Preserve aspect ratio on inference input |
-| `--print-intrinsics` | — | Print model intrinsics and exit |
-
----
 
 ## How It Works
 
@@ -149,10 +114,11 @@ BEEP_COOLDOWN       = 2.0    # seconds between repeated beeps
 
 ```
 driver-safety/
-├── driver_safety.py       # Main inference script (Raspberry Pi)
-├── train_colab.py         # Custom model training script (Google Colab)
-├── assets/
-│   └── coco_labels.txt    # COCO class labels (80 classes)
+├── imx500_object_detection_demo.py       # Main inference script (Raspberry Pi)
+├── aisd_model_training.ipynb         # Custom model training script (Google Colab)
+├── data sets/
+│   └── all_images.zip
+│   └── all_images.zip
 └── README.md
 ```
 
@@ -160,7 +126,7 @@ driver-safety/
 
 ## Training a Custom Model
 
-The custom model was trained on Google Colab using `train_colab.py`. It fine-tunes **YOLOv8n** on a dataset of 3 domain-specific classes: `phone`, `face`, and `sunglasses`.
+The custom model was trained on Google Colab using `aisd_model_training.ipynb`. It fine-tunes **YOLOv8n** on a dataset of 3 domain-specific classes: `phone`, `face`, and `sunglasses`.
 
 ### Classes
 
@@ -181,7 +147,7 @@ all_images.zip   ← all annotated images
 all_labels.zip   ← matching YOLO .txt label files
 ```
 
-**2. Open `train_colab.py` in Google Colab**
+**2. Open `aisd_model_training.ipynb` in Google Colab**
 
 When prompted, upload `all_images.zip` and `all_labels.zip`. The script will:
 
@@ -228,7 +194,6 @@ best.pt   ← use this for IMX500 export
 **5. Export to IMX500 (Linux only, Python 3.10)**
 
 On the Linux workstation, convert `best.pt` to an IMX500-compatible model:
-
 ```bash
 uv run python yolo_export.py \
   --init_model best.pt \
@@ -252,12 +217,29 @@ imx500-package -i packerOut.zip -o ./model_output
 **7. Run on Raspberry Pi**
 
 ```bash
-uv run python driver_safety.py \
+uv run python imx500_object_detection_demo.py \
   --model ./model_output/network.rpk \
   --labels ./best_imx_model/labels.txt \
   --bbox-normalization \
   --bbox-order xy
 ```
+### All arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--model` | SSD MobileNetV2 FPN (bundled) | Path to `.rpk` model file |
+| `--labels` | `assets/coco_labels.txt` | Path to labels text file |
+| `--threshold` | `0.20` | Detection confidence threshold |
+| `--iou` | `0.65` | NMS IoU threshold |
+| `--max-detections` | `10` | Max detections per frame |
+| `--fps` | (from model intrinsics) | Camera frame rate |
+| `--bbox-normalization` | — | Enable bounding box normalization |
+| `--bbox-order` | `yx` | Bounding box coordinate order (`yx` or `xy`) |
+| `--postprocess` | — | Postprocess mode (`nanodet` or empty) |
+| `--preserve-aspect-ratio` | — | Preserve aspect ratio on inference input |
+| `--print-intrinsics` | — | Print model intrinsics and exit |
+
+---
 
 > The IMX500 AI camera supports **YOLOv8n** and **YOLO11n** only.
 
